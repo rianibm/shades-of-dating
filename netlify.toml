@@ -1,0 +1,17 @@
+[build]
+  command = "yarn install && yarn build"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/recommendations"
+  to = "/.netlify/functions/recommendations"
+  status = 200
+
+[[redirects]]
+  from = "/api/health"
+  to = "/.netlify/functions/health"
+  status = 200

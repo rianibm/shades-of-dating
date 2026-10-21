@@ -1,5 +1,3 @@
-import "./styles.css";
-
 const form = document.querySelector("#date-form");
 const results = document.querySelector("#results");
 const resultsGrid = document.querySelector("#recommendation-grid");
@@ -41,7 +39,7 @@ form.addEventListener("submit", async (event) => {
     aiClosing.textContent = "";
     resultsStatus.textContent =
       error instanceof TypeError
-        ? "Backend Python belum jalan. Jalankan `python3 app.py`, lalu coba lagi."
+        ? "Backend belum jalan. Lokal: `python3 app.py` + `yarn dev`, atau `netlify dev`."
         : error.message;
     results.scrollIntoView({ behavior: "smooth", block: "start" });
   } finally {

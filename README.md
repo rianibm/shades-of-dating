@@ -7,6 +7,8 @@ does not need an AI provider, API key, account, or saved answers.
 
 ## Run locally
 
+### Option A — Vite + Python API
+
 Use two terminals from the project root:
 
 ```sh
@@ -20,6 +22,29 @@ yarn dev
 
 Open the local URL printed by Vite. Its development server proxies `/api` calls
 to the Python server at `127.0.0.1:8000`.
+
+### Option B — Netlify dev (production-like)
+
+```sh
+yarn install
+netlify dev
+```
+
+This serves the Vite build pipeline and Netlify Functions on the same origin,
+matching production routing for `/api/*`.
+
+## Deploy on Netlify
+
+The site builds with Vite and serves API routes from Netlify Functions.
+
+1. Connect the repo in Netlify (build settings come from `netlify.toml`).
+2. Add environment variables in the Netlify UI:
+   - `AI_GATEWAY_API_KEY` — required for AI date plans (from [Vercel AI Gateway](https://vercel.com/ai-gateway)).
+   - `AI_GATEWAY_MODEL` — optional; defaults to `openai/gpt-4.1-mini`.
+3. Deploy. `/api/recommendations` and `/api/health` are rewritten to functions.
+
+Curated venue data lives in `data/curated-data.json` and is shared by the Python
+API and Netlify Functions.
 
 ## Validate
 

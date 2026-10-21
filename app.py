@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote_plus, urlparse
 from urllib.request import Request, urlopen
@@ -34,11 +35,23 @@ AI_RESPONSE_SCHEMA = {
     "required": ["opening", "plans", "closing"],
     "additionalProperties": False,
 }
+_CATALOG_PATH = Path(__file__).resolve().parent / "data" / "curated-data.json"
+with _CATALOG_PATH.open(encoding="utf-8") as catalog_file:
+    _CATALOG = json.load(catalog_file)
+
+IDEAS = [
+    {
+        **{key: value for key, value in idea.items() if key not in {"vibes", "styles"}},
+        "vibes": set(idea["vibes"]),
+        "styles": set(idea["styles"]),
+    }
+    for idea in _CATALOG["ideas"]
+]
+AREA_LABELS = _CATALOG["areaLabels"]
+MOOD_LABELS = _CATALOG["moodLabels"]
+STYLE_LABELS = _CATALOG["styleLabels"]
 VALID_CHOICES = {
-    "area": {"any", "central", "south", "west", "north", "east"},
-    "budget": {"hemat", "sedang", "royal"},
-    "mood": {"ngobrol", "kuliner", "seni", "alam", "main"},
-    "style": {"first", "regular", "adventure"},
+    field: set(values) for field, values in _CATALOG["validChoices"].items()
 }
 
 
@@ -195,211 +208,6 @@ def generate_ai_enrichment(
         "plans": plans,
         "closing": closing.strip(),
     }
-
-
-IDEAS = [
-    {
-        "id": "blok-m",
-        "title": "Food crawl Blok M + M Bloc",
-        "area": "south",
-        "area_label": "Jakarta Selatan",
-        "icon": "🥐",
-        "vibes": {"kuliner", "ngobrol", "main"},
-        "styles": {"first", "regular"},
-        "indoor": True,
-        "low": 45_000,
-        "high": 180_000,
-        "budget_label": "Rp45–180rb / orang",
-        "duration": "2–3 jam",
-        "description": "Pilih dua tempat makan, lanjut jalan-jalan dan window shopping. Bikin challenge: masing-masing pilih satu snack buat dicoba bareng.",
-        "why": "Banyak opsi buat ngobrol santai, dan gampang pindah tempat kalau suasananya kurang cocok.",
-        "official_url": "",
-        "map_query": "M Bloc Space Blok M Jakarta",
-    },
-    {
-        "id": "kota-tua",
-        "title": "Jalan sore di Kota Tua",
-        "area": "west",
-        "area_label": "Jakarta Barat",
-        "icon": "🚲",
-        "vibes": {"alam", "seni", "ngobrol"},
-        "styles": {"first", "regular", "adventure"},
-        "indoor": False,
-        "low": 15_000,
-        "high": 100_000,
-        "budget_label": "Rp15–100rb / orang",
-        "duration": "1–3 jam",
-        "description": "Keliling kawasan bersejarah, cari jajanan, dan foto-foto dengan tema turis lokal. Bonus: pilih bangunan favorit masing-masing.",
-        "why": "Aktivitas ringan bantu obrolan first date mengalir tanpa harus saling tatap di meja terus.",
-        "official_url": "",
-        "map_query": "Kota Tua Jakarta",
-    },
-    {
-        "id": "museum-macan",
-        "title": "Lihat pameran di Museum MACAN",
-        "area": "west",
-        "area_label": "Jakarta Barat",
-        "icon": "🖼️",
-        "vibes": {"seni", "ngobrol"},
-        "styles": {"first", "regular"},
-        "indoor": True,
-        "low": 100_000,
-        "high": 180_000,
-        "budget_label": "Sekitar Rp100–180rb / orang",
-        "duration": "1,5–2 jam",
-        "description": "Keliling pameran seni kontemporer, lalu saling tebak arti karya yang paling bikin penasaran.",
-        "why": "Selalu ada topik obrolan baru, bahkan kalau kalian belum hafal nama semua seniman.",
-        "official_url": "https://www.museummacan.org/",
-        "map_query": "Museum MACAN Jakarta",
-    },
-    {
-        "id": "hutan-kota",
-        "title": "Piknik tipis di Hutan Kota GBK",
-        "area": "central",
-        "area_label": "Jakarta Pusat",
-        "icon": "🌳",
-        "vibes": {"alam", "ngobrol"},
-        "styles": {"first", "regular"},
-        "indoor": False,
-        "low": 0,
-        "high": 80_000,
-        "budget_label": "Gratis–Rp80rb / orang",
-        "duration": "1–2 jam",
-        "description": "Bawa minuman dan camilan sendiri, cari spot duduk, lalu ngobrol sambil lihat kota dari sisi yang lebih adem.",
-        "why": "Hemat, santai, dan enak buat ngobrol tanpa harus berebut suara sama musik kafe.",
-        "official_url": "https://gbk.id/",
-        "map_query": "Hutan Kota GBK Jakarta",
-    },
-    {
-        "id": "ragunan",
-        "title": "Jalan santai di Ragunan",
-        "area": "south",
-        "area_label": "Jakarta Selatan",
-        "icon": "🦒",
-        "vibes": {"alam", "main"},
-        "styles": {"regular", "adventure"},
-        "indoor": False,
-        "low": 10_000,
-        "high": 75_000,
-        "budget_label": "Mulai sekitar Rp10rb / orang",
-        "duration": "2–4 jam",
-        "description": "Pilih beberapa area satwa, jalan santai, dan istirahat buat jajan. Cek jam operasional serta tiket sebelum berangkat.",
-        "why": "Ada banyak bahan obrolan dan jalan kaki bareng bikin date terasa aktif tapi nggak kompetitif.",
-        "official_url": "https://ragunanzoo.jakarta.go.id/",
-        "map_query": "Taman Margasatwa Ragunan Jakarta",
-    },
-    {
-        "id": "ancol",
-        "title": "Kejar sunset di Ancol",
-        "area": "north",
-        "area_label": "Jakarta Utara",
-        "icon": "🌅",
-        "vibes": {"alam", "ngobrol"},
-        "styles": {"regular", "adventure"},
-        "indoor": False,
-        "low": 35_000,
-        "high": 250_000,
-        "budget_label": "Mulai sekitar Rp35rb / orang",
-        "duration": "2–3 jam",
-        "description": "Jalan di tepi pantai menjelang sore, cari camilan, lalu pilih spot buat menikmati langit berubah warna.",
-        "why": "Pemandangan jadi ice breaker alami. Cek tiket masuk dan kondisi cuaca sebelum berangkat.",
-        "official_url": "https://www.ancol.com/",
-        "map_query": "Ancol Beach Jakarta",
-    },
-    {
-        "id": "tmii",
-        "title": "Keliling mini di TMII",
-        "area": "east",
-        "area_label": "Jakarta Timur",
-        "icon": "🚠",
-        "vibes": {"seni", "alam", "main"},
-        "styles": {"regular", "adventure"},
-        "indoor": False,
-        "low": 35_000,
-        "high": 200_000,
-        "budget_label": "Mulai sekitar Rp35rb / orang",
-        "duration": "3–5 jam",
-        "description": "Pilih beberapa anjungan atau museum, naik kendaraan keliling jika tersedia, dan bikin rute mini bareng.",
-        "why": "Cocok buat date seharian yang isinya eksplor, bukan cuma duduk dan tanya “mau makan apa?”.",
-        "official_url": "https://tamanmini.com/",
-        "map_query": "Taman Mini Indonesia Indah",
-    },
-    {
-        "id": "aquarium",
-        "title": "Date bawah laut di Jakarta Aquarium",
-        "area": "west",
-        "area_label": "Jakarta Barat",
-        "icon": "🐠",
-        "vibes": {"main", "alam"},
-        "styles": {"first", "regular"},
-        "indoor": True,
-        "low": 150_000,
-        "high": 300_000,
-        "budget_label": "Sekitar Rp150–300rb / orang",
-        "duration": "1,5–2,5 jam",
-        "description": "Jelajahi akuarium indoor, cari hewan paling unik, lalu istirahat atau makan di area sekitarnya.",
-        "why": "Aktivitasnya sudah disediakan, jadi nggak perlu mikir cara mengisi jeda obrolan.",
-        "official_url": "https://www.jakartaaquariumsafari.com/",
-        "map_query": "Jakarta Aquarium Safari",
-    },
-    {
-        "id": "monas",
-        "title": "Monas + jajan di sekitar Medan Merdeka",
-        "area": "central",
-        "area_label": "Jakarta Pusat",
-        "icon": "🏛️",
-        "vibes": {"alam", "seni", "ngobrol"},
-        "styles": {"first", "regular", "adventure"},
-        "indoor": False,
-        "low": 15_000,
-        "high": 100_000,
-        "budget_label": "Rp15–100rb / orang",
-        "duration": "1,5–3 jam",
-        "description": "Jalan di kawasan Monas dan taman, lalu cari jajanan. Kalau mau masuk area tertentu, cek tiket dan aksesnya dulu.",
-        "why": "Ikonik, gampang jadi titik temu, dan rencananya bisa disesuaikan dengan tenaga serta budget.",
-        "official_url": "",
-        "map_query": "Monumen Nasional Jakarta",
-    },
-    {
-        "id": "tebet-eco-park",
-        "title": "Ngobrol sambil muter Tebet Eco Park",
-        "area": "south",
-        "area_label": "Jakarta Selatan",
-        "icon": "🍃",
-        "vibes": {"alam", "ngobrol"},
-        "styles": {"first", "regular"},
-        "indoor": False,
-        "low": 0,
-        "high": 60_000,
-        "budget_label": "Gratis–Rp60rb / orang",
-        "duration": "1–2 jam",
-        "description": "Jalan santai, cari area duduk yang nyaman, dan lanjut jajan di sekitar taman setelahnya.",
-        "why": "Pilihan low-pressure buat ngobrol lebih lama tanpa harus booking atau pesan banyak.",
-        "official_url": "",
-        "map_query": "Tebet Eco Park Jakarta",
-    },
-]
-
-AREA_LABELS = {
-    "any": "bebas area",
-    "central": "Jakarta Pusat",
-    "south": "Jakarta Selatan",
-    "west": "Jakarta Barat",
-    "north": "Jakarta Utara",
-    "east": "Jakarta Timur",
-}
-MOOD_LABELS = {
-    "ngobrol": "ngobrol santai",
-    "kuliner": "kulineran",
-    "seni": "seni dan budaya",
-    "alam": "suasana outdoor",
-    "main": "aktivitas seru",
-}
-STYLE_LABELS = {
-    "first": "first date yang nggak awkward",
-    "regular": "date rutin yang butuh suasana baru",
-    "adventure": "petualangan berdua",
-}
 
 
 def rank_ideas(answers: dict[str, str]) -> list[dict[str, object]]:
